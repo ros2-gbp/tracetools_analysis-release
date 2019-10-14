@@ -1,3 +1,5 @@
+import glob
+
 from setuptools import find_packages
 from setuptools import setup
 
@@ -5,10 +7,11 @@ package_name = 'tracetools_analysis'
 
 setup(
     name=package_name,
-    version='0.1.1',
+    version='0.2.0',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/launch', glob.glob('launch/*.launch.py')),
     ],
     install_requires=['setuptools'],
     maintainer=(
@@ -16,7 +19,7 @@ setup(
         'Ingo Lütkebohle'
     ),
     maintainer_email=(
-        'fixed-term.christophe.bourquebedard@de.bosch.com, '
+        'bedard.christophe@gmail.com, '
         'ingo.luetkebohle@de.bosch.com'
     ),
     author=(

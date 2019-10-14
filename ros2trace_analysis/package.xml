@@ -1,17 +1,15 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
-  <name>tracetools_analysis</name>
+  <name>ros2trace_analysis</name>
   <version>0.2.0</version>
-  <description>Tools for analysing trace data.</description>
-  <maintainer email="bedard.christophe@gmail.com">Christophe Bedard</maintainer>
-  <maintainer email="ingo.luetkebohle@de.bosch.com">Ingo Lütkebohle</maintainer>
+  <description>The trace analysis command for ROS 2 command line tools.</description>
+  <maintainer email="christophe.bedard@apex.ai">Christophe Bedard</maintainer>
   <license>Apache 2.0</license>
-  <author email="ingo.luetkebohle@de.bosch.com">Ingo Lütkebohle</author>
-  <author email="fixed-term.christophe.bourquebedard@de.bosch.com">Christophe Bedard</author>
+  <author email="christophe.bedard@apex.ai">Christophe Bedard</author>
 
-  <depend>tracetools_read</depend>
-  <depend>python3-pandas</depend>
+  <depend>ros2cli</depend>
+  <depend>tracetools_analysis</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

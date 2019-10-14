@@ -12,23 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tools for analysing trace data."""
+"""Module for converted trace file loading."""
+
+import os
+import pickle
+from typing import Dict
+from typing import List
 
 
-def time_diff_to_str(
-    time_diff: float,
-) -> str:
+def load_file(file_path: str) -> List[Dict]:
     """
-    Format time difference as a string.
+    Load file containing converted trace events.
 
-    :param time_diff: the difference between two timepoints (e.g. `time.time()`)
+    :param file_path: the path to the converted file to load
+    :return: the list of events read from the file
     """
-    if time_diff < 1.0:
-        # ms
-        return f'{time_diff * 1000:.0f} ms'
-    elif time_diff < 60.0:
-        # s
-        return f'{time_diff:.1f} s'
-    else:
-        # m s
-        return f'{time_diff // 60.0:.0f} m {time_diff % 60.0:.0f} s'
+    events = []
+    with open(os.path.expanduser(file_path), 'rb') as f:
+        p = pickle.Unpickler(f)
+        while True:
+            try:
+                events.append(p.load())
+            except EOFError:
+                break  # we're done
+
+    return events

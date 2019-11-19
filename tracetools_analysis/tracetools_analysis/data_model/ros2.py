@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for ROS data model."""
+"""Module for ROS 2 data model."""
 
 import pandas as pd
 
 from . import DataModel
 
 
-class RosDataModel(DataModel):
+class Ros2DataModel(DataModel):
     """
-    Container to model pre-processed ROS data for analysis.
+    Container to model pre-processed ROS 2 data for analysis.
 
-    This aims to represent the data in a ROS-aware way.
+    This aims to represent the data in a ROS 2-aware way.
     """
 
     def __init__(self) -> None:
@@ -56,6 +56,10 @@ class RosDataModel(DataModel):
                                                    'topic_name',
                                                    'depth'])
         self.subscriptions.set_index(['subscription_handle'], inplace=True, drop=True)
+        self.subscription_objects = pd.DataFrame(columns=['subscription',
+                                                          'timestamp',
+                                                          'subscription_handle'])
+        self.subscription_objects.set_index(['subscription'], inplace=True, drop=True)
         self.services = pd.DataFrame(columns=['service_handle',
                                               'timestamp',
                                               'node_handle',
@@ -74,10 +78,10 @@ class RosDataModel(DataModel):
                                             'tid'])
         self.timers.set_index(['timer_handle'], inplace=True, drop=True)
 
-        self.callback_objects = pd.DataFrame(columns=['handle',
+        self.callback_objects = pd.DataFrame(columns=['reference',
                                                       'timestamp',
                                                       'callback_object'])
-        self.callback_objects.set_index(['handle'], inplace=True, drop=True)
+        self.callback_objects.set_index(['reference'], inplace=True, drop=True)
         self.callback_symbols = pd.DataFrame(columns=['callback_object',
                                                       'timestamp',
                                                       'symbol'])
@@ -104,10 +108,15 @@ class RosDataModel(DataModel):
     ) -> None:
         self.publishers.loc[handle] = [timestamp, node_handle, rmw_handle, topic_name, depth]
 
-    def add_subscription(
+    def add_rcl_subscription(
         self, handle, timestamp, node_handle, rmw_handle, topic_name, depth
     ) -> None:
         self.subscriptions.loc[handle] = [timestamp, node_handle, rmw_handle, topic_name, depth]
+
+    def add_rclcpp_subscription(
+        self, subscription_pointer, timestamp, subscription_handle
+    ) -> None:
+        self.subscription_objects.loc[subscription_pointer] = [timestamp, subscription_handle]
 
     def add_service(
         self, handle, timestamp, node_handle, rmw_handle, service_name
@@ -125,9 +134,9 @@ class RosDataModel(DataModel):
         self.timers.loc[handle] = [timestamp, period, tid]
 
     def add_callback_object(
-        self, handle, timestamp, callback_object
+        self, reference, timestamp, callback_object
     ) -> None:
-        self.callback_objects.loc[handle] = [timestamp, callback_object]
+        self.callback_objects.loc[reference] = [timestamp, callback_object]
 
     def add_callback_symbol(
         self, callback_object, timestamp, symbol
@@ -145,26 +154,38 @@ class RosDataModel(DataModel):
         }
         self.callback_instances = self.callback_instances.append(data, ignore_index=True)
 
-    def print_model(self) -> None:
-        """Debug method to print every contained df."""
-        print('====================ROS DATA MODEL====================')
-        print(f'Contexts:\n{self.contexts.to_string()}')
+    def print_data(self) -> None:
+        print('====================ROS 2 DATA MODEL===================')
+        print('Contexts:')
+        print(self.contexts.to_string())
         print()
-        print(f'Nodes:\n{self.nodes.to_string()}')
+        print('Nodes:')
+        print(self.nodes.to_string())
         print()
-        print(f'Publishers:\n{self.publishers.to_string()}')
+        print('Publishers:')
+        print(self.publishers.to_string())
         print()
-        print(f'Subscriptions:\n{self.subscriptions.to_string()}')
+        print('Subscriptions:')
+        print(self.subscriptions.to_string())
         print()
-        print(f'Services:\n{self.services.to_string()}')
+        print('Subscription objects:')
+        print(self.subscription_objects.to_string())
         print()
-        print(f'Clients:\n{self.clients.to_string()}')
+        print('Services:')
+        print(self.services.to_string())
         print()
-        print(f'Timers:\n{self.timers.to_string()}')
+        print('Clients:')
+        print(self.clients.to_string())
         print()
-        print(f'Callback objects:\n{self.callback_objects.to_string()}')
+        print('Timers:')
+        print(self.timers.to_string())
         print()
-        print(f'Callback symbols:\n{self.callback_symbols.to_string()}')
+        print('Callback objects:')
+        print(self.callback_objects.to_string())
         print()
-        print(f'Callback instances:\n{self.callback_instances.to_string()}')
+        print('Callback symbols:')
+        print(self.callback_symbols.to_string())
+        print()
+        print('Callback instances:')
+        print(self.callback_instances.to_string())
         print('==================================================')

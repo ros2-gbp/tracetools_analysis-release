@@ -25,6 +25,7 @@ from typing import Tuple
 from tracetools_analysis.convert import convert
 from tracetools_analysis.convert import DEFAULT_CONVERT_FILE_NAME
 from tracetools_analysis.loading import load_file
+from tracetools_analysis.processor import Processor
 from tracetools_analysis.processor.ros2 import Ros2Handler
 from tracetools_read.trace import is_trace_directory
 
@@ -40,6 +41,10 @@ def add_args(parser: argparse.ArgumentParser) -> None:
         '-f', '--force-conversion', dest='force_conversion',
         action='store_true', default=False,
         help='re-convert trace directory even if converted file is found')
+    parser.add_argument(
+        '-s', '--hide-results', dest='hide_results',
+        action='store_true', default=False,
+        help='hide/suppress results from being printed')
 
 
 def parse_args():
@@ -113,12 +118,14 @@ def inspect_input_path(
 def process(
     input_path: str,
     force_conversion: bool = False,
+    hide_results: bool = False,
 ) -> Optional[int]:
     """
     Process converted trace file.
 
     :param input_path: the path to a converted file or trace directory
     :param force_conversion: whether to re-creating converted file even if it is found
+    :param hide_results: whether to hide results and not print them
     """
     converted_file_path, create_converted_file = inspect_input_path(input_path, force_conversion)
 
@@ -134,16 +141,20 @@ def process(
     start_time = time.time()
 
     events = load_file(converted_file_path)
-    ros2_handler = Ros2Handler.process(events)
+    processor = Processor(Ros2Handler())
+    processor.process(events)
 
     time_diff = time.time() - start_time
-    ros2_handler.data.print_model()
+    if not hide_results:
+        processor.print_data()
     print(f'processed {len(events)} events in {time_diff_to_str(time_diff)}')
 
 
 def main():
     args = parse_args()
-    input_path = args.input_path
-    force_conversion = args.force_conversion
 
-    process(input_path, force_conversion)
+    process(
+        args.input_path,
+        args.force_conversion,
+        args.hide_results,
+    )

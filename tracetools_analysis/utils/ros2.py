@@ -1,4 +1,5 @@
 # Copyright 2019 Robert Bosch GmbH
+# Copyright 2019 Apex.AI, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,181 +13,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for data model utility classes."""
+"""Module for ROS data model utils."""
 
-from collections import defaultdict
-from datetime import datetime as dt
 from typing import Any
-from typing import Dict
 from typing import List
 from typing import Mapping
-from typing import Set
 from typing import Union
 
 from pandas import DataFrame
 
-from .data_model import DataModel
-from .data_model.cpu_time import CpuTimeDataModel
-from .data_model.profile import ProfileDataModel
-from .data_model.ros import RosDataModel
+from . import DataModelUtil
+from ..data_model.ros2 import Ros2DataModel
 
 
-class DataModelUtil():
-    """
-    Base data model util class, which provides functions to get more info about a data model.
+class Ros2DataModelUtil(DataModelUtil):
+    """ROS 2 data model utility class."""
 
-    This class provides basic util functions.
-    """
-
-    def __init__(self, data_model: DataModel) -> None:
-        """
-        Constructor.
-
-        :param data_model: the data model
-        """
-        self.__data = data_model
-
-    @property
-    def data(self) -> DataModel:
-        return self.__data
-
-    @staticmethod
-    def convert_time_columns(
-        original: DataFrame,
-        columns_ns_to_ms: List[str] = [],
-        columns_ns_to_datetime: List[str] = [],
-        inplace: bool = True,
-    ) -> DataFrame:
-        """
-        Convert time columns from nanoseconds to either milliseconds or `datetime` objects.
-
-        :param original: the original `DataFrame`
-        :param columns_ns_to_ms: the columns for which to convert ns to ms
-        :param columns_ns_to_datetime: the columns for which to convert ns to `datetime`
-        :param inplace: whether to convert in place or to return a copy
-        :return: the resulting `DataFrame`
-        """
-        df = original if inplace else original.copy()
-        # Convert from ns to ms
-        if len(columns_ns_to_ms) > 0:
-            df[columns_ns_to_ms] = df[columns_ns_to_ms].applymap(
-                lambda t: t / 1000000.0
-            )
-        # Convert from ns to ms + ms to datetime, as UTC
-        if len(columns_ns_to_datetime) > 0:
-            df[columns_ns_to_datetime] = df[columns_ns_to_datetime].applymap(
-                lambda t: dt.utcfromtimestamp(t / 1000000000.0)
-            )
-        return df
-
-    @staticmethod
-    def compute_column_difference(
-        df: DataFrame,
-        left_column: str,
-        right_column: str,
-        diff_column: str,
+    def __init__(
+        self,
+        data_model: Ros2DataModel,
     ) -> None:
         """
-        Create new column with difference between two columns.
-
-        :param df: the dataframe (inplace)
-        :param left_column: the name of the left column
-        :param right_column: the name of the right column
-        :param diff_column: the name of the new column with differences
-        """
-        df[diff_column] = df.apply(lambda row: row[left_column] - row[right_column], axis=1)
-
-
-class ProfileDataModelUtil(DataModelUtil):
-    """Profiling data model utility class."""
-
-    def __init__(self, data_model: ProfileDataModel) -> None:
-        """
         Constructor.
 
         :param data_model: the data model object to use
         """
         super().__init__(data_model)
 
-    def with_tid(self, tid: int) -> DataFrame:
-        return self.data.times.loc[self.data.times['tid'] == tid]
-
-    def get_tids(self) -> Set[int]:
-        """Get the TIDs in the data model."""
-        return set(self.data.times['tid'])
-
-    def get_call_tree(self, tid: int) -> Dict[str, List[str]]:
-        depth_names = self.with_tid(tid)[
-            ['depth', 'function_name', 'parent_name']
-        ].drop_duplicates()
-        # print(depth_names.to_string())
-        tree = defaultdict(set)
-        for _, row in depth_names.iterrows():
-            depth = row['depth']
-            name = row['function_name']
-            parent = row['parent_name']
-            if depth == 0:
-                tree[name]
-            else:
-                tree[parent].add(name)
-        return dict(tree)
-
-    def get_function_duration_data(self, tid: int) -> List[Dict[str, Union[int, str, DataFrame]]]:
-        """Get duration data for each function."""
-        tid_df = self.with_tid(tid)
-        depth_names = tid_df[['depth', 'function_name', 'parent_name']].drop_duplicates()
-        functions_data = []
-        for _, row in depth_names.iterrows():
-            depth = row['depth']
-            name = row['function_name']
-            parent = row['parent_name']
-            data = tid_df.loc[
-                (tid_df['depth'] == depth) &
-                (tid_df['function_name'] == name)
-            ][['start_timestamp', 'duration', 'actual_duration']]
-            self.compute_column_difference(
-                data,
-                'duration',
-                'actual_duration',
-                'duration_difference',
-            )
-            functions_data.append({
-                'depth': depth,
-                'function_name': name,
-                'parent_name': parent,
-                'data': data,
-            })
-        return functions_data
-
-
-class CpuTimeDataModelUtil(DataModelUtil):
-    """CPU time data model utility class."""
-
-    def __init__(self, data_model: CpuTimeDataModel) -> None:
-        """
-        Constructor.
-
-        :param data_model: the data model object to use
-        """
-        super().__init__(data_model)
-
-    def get_time_per_thread(self) -> DataFrame:
-        """Get a DataFrame of total duration for each thread."""
-        return self.data.times.loc[:, ['tid', 'duration']].groupby(by='tid').sum()
-
-
-class RosDataModelUtil(DataModelUtil):
-    """ROS data model utility class."""
-
-    def __init__(self, data_model: RosDataModel) -> None:
-        """
-        Constructor.
-
-        :param data_model: the data model object to use
-        """
-        super().__init__(data_model)
-
-    def _prettify(self, original: str) -> str:
+    def _prettify(
+        self,
+        original: str,
+    ) -> str:
         """
         Process symbol to make it more readable.
 
@@ -258,7 +115,8 @@ class RosDataModelUtil(DataModelUtil):
         }
 
     def get_callback_durations(
-        self, callback_obj: int
+        self,
+        callback_obj: int,
     ) -> DataFrame:
         """
         Get durations of callback instances for a given callback object.
@@ -272,10 +130,11 @@ class RosDataModelUtil(DataModelUtil):
             ['timestamp', 'duration']
         ]
         # Time conversion
-        return self.convert_time_columns(data, ['timestamp', 'duration'], ['timestamp'])
+        return self.convert_time_columns(data, ['duration'], ['timestamp'])
 
     def get_node_tid_from_name(
-        self, node_name: str
+        self,
+        node_name: str,
     ) -> Union[int, None]:
         """
         Get the tid corresponding to a node.
@@ -291,7 +150,8 @@ class RosDataModelUtil(DataModelUtil):
         return node_row.iloc[0]['tid'] if not node_row.empty else None
 
     def get_node_names_from_tid(
-        self, tid: str
+        self,
+        tid: str,
     ) -> Union[List[str], None]:
         """
         Get the list of node names corresponding to a tid.
@@ -304,7 +164,8 @@ class RosDataModelUtil(DataModelUtil):
         ]['name'].tolist()
 
     def get_callback_owner_info(
-        self, callback_obj: int
+        self,
+        callback_obj: int,
     ) -> Union[str, None]:
         """
         Get information about the owner of a callback.
@@ -317,36 +178,37 @@ class RosDataModelUtil(DataModelUtil):
         :param callback_obj: the callback object value
         :return: information about the owner of the callback, or `None` if it fails
         """
-        # Get handle corresponding to callback object
-        handle = self.data.callback_objects.loc[
+        # Get reference corresponding to callback object
+        reference = self.data.callback_objects.loc[
             self.data.callback_objects['callback_object'] == callback_obj
         ].index.values.astype(int)[0]
 
         type_name = None
         info = None
         # Check if it's a timer first (since it's slightly different than the others)
-        if handle in self.data.timers.index:
+        if reference in self.data.timers.index:
             type_name = 'Timer'
-            info = self.get_timer_handle_info(handle)
-        elif handle in self.data.publishers.index:
+            info = self.get_timer_handle_info(reference)
+        elif reference in self.data.publishers.index:
             type_name = 'Publisher'
-            info = self.get_publisher_handle_info(handle)
-        elif handle in self.data.subscriptions.index:
+            info = self.get_publisher_handle_info(reference)
+        elif reference in self.data.subscription_objects.index:
             type_name = 'Subscription'
-            info = self.get_subscription_handle_info(handle)
-        elif handle in self.data.services.index:
+            info = self.get_subscription_reference_info(reference)
+        elif reference in self.data.services.index:
             type_name = 'Service'
-            info = self.get_subscription_handle_info(handle)
-        elif handle in self.data.clients.index:
+            info = self.get_service_handle_info(reference)
+        elif reference in self.data.clients.index:
             type_name = 'Client'
-            info = self.get_client_handle_info(handle)
+            info = self.get_client_handle_info(reference)
 
         if info is not None:
             info = f'{type_name} -- {self.format_info_dict(info)}'
         return info
 
     def get_timer_handle_info(
-        self, timer_handle: int
+        self,
+        timer_handle: int,
     ) -> Union[Mapping[str, Any], None]:
         """
         Get information about the owner of a timer.
@@ -364,7 +226,8 @@ class RosDataModelUtil(DataModelUtil):
         return {'tid': tid, 'period': f'{period_ms:.0f} ms'}
 
     def get_publisher_handle_info(
-        self, publisher_handle: int
+        self,
+        publisher_handle: int,
     ) -> Union[Mapping[str, Any], None]:
         """
         Get information about a publisher handle.
@@ -381,30 +244,61 @@ class RosDataModelUtil(DataModelUtil):
         publisher_info = {'topic': topic_name}
         return {**node_handle_info, **publisher_info}
 
-    def get_subscription_handle_info(
-        self, subscription_handle: int
+    def get_subscription_reference_info(
+        self,
+        subscription_reference: int,
     ) -> Union[Mapping[str, Any], None]:
         """
         Get information about a subscription handle.
 
-        :param subscription_handle: the subscription handle value
+        :param subscription_reference: the subscription reference value
         :return: a dictionary with name:value info, or `None` if it fails
         """
-        subscriptions_info = self.data.subscriptions.merge(
-            self.data.nodes,
-            left_on='node_handle',
-            right_index=True)
-        if subscription_handle not in self.data.subscriptions.index:
+        # First check that the subscription reference exists
+        if subscription_reference not in self.data.subscription_objects.index:
             return None
 
-        node_handle = subscriptions_info.loc[subscription_handle, 'node_handle']
+        # To get information about a subscription reference, we need 3 dataframes
+        #   * subscription_objects
+        #      * subscription (reference) <--> subscription_handle
+        #   * subscriptions
+        #      * subscription_handle <--> topic_name
+        #      * subscription_handle <--> node_handle
+        #   * nodes
+        #      * node_handle <--> (node info)
+        # First, drop unnecessary common columns for debugging simplicity
+        subscription_objects_simple = self.data.subscription_objects.drop(
+            columns=['timestamp'],
+            axis=1,
+        )
+        subscriptions_simple = self.data.subscriptions.drop(
+            columns=['timestamp', 'rmw_handle'],
+            inplace=False,
+        )
+        nodes_simple = self.data.nodes.drop(
+            columns=['timestamp', 'rmw_handle'],
+            inplace=False,
+        )
+        # Then merge the 3 dataframes
+        subscriptions_info = subscription_objects_simple.merge(
+            subscriptions_simple,
+            left_on='subscription_handle',
+            right_index=True,
+        ).merge(
+            nodes_simple,
+            left_on='node_handle',
+            right_index=True,
+        )
+
+        node_handle = subscriptions_info.loc[subscription_reference, 'node_handle']
         node_handle_info = self.get_node_handle_info(node_handle)
-        topic_name = subscriptions_info.loc[subscription_handle, 'topic_name']
+        topic_name = subscriptions_info.loc[subscription_reference, 'topic_name']
         subscription_info = {'topic': topic_name}
         return {**node_handle_info, **subscription_info}
 
     def get_service_handle_info(
-        self, service_handle: int
+        self,
+        service_handle: int,
     ) -> Union[Mapping[str, Any], None]:
         """
         Get information about a service handle.
@@ -422,7 +316,8 @@ class RosDataModelUtil(DataModelUtil):
         return {**node_handle_info, **service_info}
 
     def get_client_handle_info(
-        self, client_handle: int
+        self,
+        client_handle: int,
     ) -> Union[Mapping[str, Any], None]:
         """
         Get information about a client handle.
@@ -440,7 +335,8 @@ class RosDataModelUtil(DataModelUtil):
         return {**node_handle_info, **service_info}
 
     def get_node_handle_info(
-        self, node_handle: int
+        self,
+        node_handle: int,
     ) -> Union[Mapping[str, Any], None]:
         """
         Get information about a node handle.
@@ -455,5 +351,8 @@ class RosDataModelUtil(DataModelUtil):
         tid = self.data.nodes.loc[node_handle, 'tid']
         return {'node': node_name, 'tid': tid}
 
-    def format_info_dict(self, info_dict: Mapping[str, Any]) -> str:
+    def format_info_dict(
+        self,
+        info_dict: Mapping[str, Any],
+    ) -> str:
         return ', '.join([f'{key}: {val}' for key, val in info_dict.items()])

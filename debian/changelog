@@ -1,0 +1,39 @@
+ros-eloquent-tracetools-analysis (0.2.2-1bionic) bionic; urgency=high
+
+  * Update ROS 2 handler and data model after new tracepoint
+  * Fix timestamp column conversion util method
+  * Contributors: Christophe Bedard
+
+ -- Christophe Bedard <bedard.christophe@gmail.com>  Tue, 19 Nov 2019 08:00:00 -0000
+
+ros-eloquent-tracetools-analysis (0.2.0-1bionic) bionic; urgency=high
+
+  * Improve UX
+  * Add flag for process command to force re-conversion of trace directory
+  * Make process command convert directory if necessary
+  * Make output file name optional for convert command
+  * Remove references to "pickle" file and simply use "output" file
+  * Display Processor progress on stdout
+  * Add sample data, notebook, and launch file
+  * Add data model util functions
+  * Add profiling and CPU time event handlers
+  * Refactor and extend analysis architecture
+  * Contributors: Christophe Bedard
+
+ -- Christophe Bedard <bedard.christophe@gmail.com>  Mon, 14 Oct 2019 07:00:00 -0000
+
+ros-eloquent-tracetools-analysis (0.1.1-1bionic) bionic; urgency=high
+
+  * Update metadata
+  * Contributors: Christophe Bedard
+
+ -- Christophe Bedard <bedard.christophe@gmail.com>  Tue, 16 Jul 2019 07:00:00 -0000
+
+ros-eloquent-tracetools-analysis (0.1.0-1bionic) bionic; urgency=high
+
+  * Add analysis tools
+  * Contributors: Christophe Bedard, Ingo Lütkebohle
+
+ -- Christophe Bedard <bedard.christophe@gmail.com>  Thu, 11 Jul 2019 07:00:00 -0000
+
+

@@ -5,10 +5,12 @@ package_name = 'ros2trace_analysis'
 
 setup(
     name=package_name,
-    version='0.2.2',
+    version='1.0.1',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/' + package_name, ['package.xml']),
+        ('share/ament_index/resource_index/packages',
+            ['resource/' + package_name]),
     ],
     install_requires=['ros2cli'],
     zip_safe=True,
@@ -16,15 +18,15 @@ setup(
         'Christophe Bedard'
     ),
     maintainer_email=(
-        'christophe.bedard@apex.ai'
+        'bedard.christophe@gmail.com'
     ),
     author='Christophe Bedard',
     author_email='christophe.bedard@apex.ai',
     url='https://gitlab.com/micro-ROS/ros_tracing/tracetools_analysis',
     keywords=[],
-    description='The trace analysis command for ROS 2 command line tools.',
+    description='The trace-analysis command for ROS 2 command line tools.',
     long_description=(
-        'The package provides the trace analysis '
+        'The package provides the trace-analysis '
         'command for the ROS 2 command line tools.'
     ),
     license='Apache 2.0',

@@ -16,15 +16,20 @@
 
 from collections import defaultdict
 import sys
+from types import ModuleType
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Set
 from typing import Type
+from typing import Union
 
 from tracetools_read import DictEvent
 from tracetools_read import get_event_name
 from tracetools_read import get_field
+
+from ..data_model import DataModel
 
 
 class EventMetadata():
@@ -40,7 +45,7 @@ class EventMetadata():
         tid: int = None,
     ) -> None:
         """
-        Constructor.
+        Create an EventMetadata.
 
         Parameters with a default value of `None` are not mandatory,
         since they are not always present.
@@ -77,8 +82,9 @@ class EventMetadata():
         return self._tid
 
 
-HandlerMap = Dict[str, Callable[[DictEvent, EventMetadata], None]]
-HandlerMultimap = Dict[str, List[Callable[[DictEvent, EventMetadata], None]]]
+HandlerMethod = Callable[[DictEvent, EventMetadata], None]
+HandlerMap = Dict[str, HandlerMethod]
+HandlerMultimap = Dict[str, List[HandlerMethod]]
 
 
 class Dependant():
@@ -88,6 +94,12 @@ class Dependant():
     A dependant depends on other types which might have dependencies themselves.
     Dependencies are type-related only.
     """
+
+    def __init__(
+        self,
+        **kwargs,
+    ) -> None:
+        pass
 
     @staticmethod
     def dependencies() -> List[Type['Dependant']]:
@@ -104,27 +116,30 @@ class EventHandler(Dependant):
     """
     Base event handling class.
 
-    Provides handling functions for some events, depending on the name.
-    Passes that on to a data model. To be subclassed.
+    Provides handling functions for some events, depending on the name. Passes that on to a data
+    model. Should be subclassed, but it is not necessary since the handling functions can be
+    anything; therefore it does not raise any error if it is directly instantiated.
     """
 
     def __init__(
         self,
         *,
         handler_map: HandlerMap,
+        data_model: Optional[DataModel] = None,
         **kwargs,
     ) -> None:
         """
-        Constructor.
-
-        TODO make subclasses pass on their *DataModel to this class
+        Create an EventHandler.
 
         :param handler_map: the mapping from event name to handling method
+        :param data_model: the data model
         """
         assert handler_map is not None and len(handler_map) > 0, \
             f'empty map: {self.__class__.__name__}'
+        assert all(required_name in handler_map.keys() for required_name in self.required_events())
         self._handler_map = handler_map
-        self.processor = None
+        self._data_model = data_model
+        self._processor: Optional[Processor] = None
 
     @property
     def handler_map(self) -> HandlerMap:
@@ -132,13 +147,30 @@ class EventHandler(Dependant):
         return self._handler_map
 
     @property
-    def data(self) -> None:
+    def data(self) -> DataModel:
         """Get the data model."""
-        return None
+        return self._data_model  # type: ignore
 
-    def register_processor(self, processor: 'Processor') -> None:
+    @property
+    def processor(self) -> Optional['Processor']:
+        return self._processor
+
+    @staticmethod
+    def required_events() -> Set[str]:
+        """
+        Get the set of events required by this EventHandler.
+
+        Without these events, the EventHandler would be invalid/useless. Inheriting classes can
+        decide not to declare that they require specific events.
+        """
+        return set()
+
+    def register_processor(
+        self,
+        processor: 'Processor',
+    ) -> None:
         """Register processor with this `EventHandler` so that it can query other handlers."""
-        self.processor = processor
+        self._processor = processor
 
     @staticmethod
     def int_to_hex_str(addr: int) -> str:
@@ -146,14 +178,19 @@ class EventHandler(Dependant):
         return f'0x{addr:X}'
 
     @classmethod
-    def process(cls, events: List[DictEvent], **kwargs) -> 'EventHandler':
+    def process(
+        cls,
+        events: List[DictEvent],
+        **kwargs,
+    ) -> 'EventHandler':
         """
         Create a `Processor` and process an instance of the class.
 
         :param events: the list of events
         :return: the processor object after processing
         """
-        assert cls != EventHandler, 'only call process() from inheriting classes'
+        if cls == EventHandler:
+            raise AssertionError('only call EventHandler.process() from inheriting classes')
         handler_object = cls(**kwargs)  # pylint: disable=all
         processor = Processor(handler_object, **kwargs)
         processor.process(events)
@@ -173,7 +210,7 @@ class DependencySolver():
         **kwargs,
     ) -> None:
         """
-        Constructor.
+        Create a DependencySolver.
 
         :param initial_dependants: the initial dependant instances, in order
         :param kwargs: the parameters to pass on to new instances
@@ -233,36 +270,45 @@ class DependencySolver():
                     solution,
                 )
             # If an instance of this type was given initially, use it instead
-            new_instance = None
-            if dep_type in initial_map:
-                new_instance = initial_map.get(dep_type)
+            dep_type_instance = initial_map.get(dep_type, None)
+            if dep_type_instance is not None:
+                solution.append(dep_type_instance)
             else:
-                new_instance = dep_type(**self._kwargs)
-            solution.append(new_instance)
+                solution.append(dep_type(**self._kwargs))
             visited.add(dep_type)
 
 
 class Processor():
     """Processor class, which dispatches events to event handlers."""
 
+    class RequiredEventNotFoundError(RuntimeError):
+        """When a trace does not contain at least one event required by an EventHandler."""
+
+        pass
+
     def __init__(
         self,
         *handlers: EventHandler,
+        quiet: bool = False,
         **kwargs,
     ) -> None:
         """
-        Constructor.
+        Create a Processor.
 
         :param handlers: the `EventHandler`s to use for processing
+        :param quiet: whether to not print any output, like progress information
         :param kwargs: the parameters to pass on to new handlers
         """
         self._initial_handlers = list(handlers)
-        expanded_handlers = self._expand_dependencies(*handlers, **kwargs)
-        self._handler_multimap = self._get_handler_maps(expanded_handlers)
-        self._register_with_handlers(expanded_handlers)
+        if len(self._initial_handlers) == 0:
+            raise RuntimeError('Must provide at least one handler!')
+        self._expanded_handlers = self._expand_dependencies(*handlers, **kwargs)
+        self._handler_multimap = self._get_handler_maps(self._expanded_handlers)
+        self._register_with_handlers(self._expanded_handlers)
+        self._quiet = quiet
         self._progress_display = ProcessingProgressDisplay(
-            [type(handler).__name__ for handler in expanded_handlers],
-        )
+            [type(handler).__name__ for handler in self._expanded_handlers],
+        ) if not self._quiet else None
         self._processing_done = False
 
     @staticmethod
@@ -276,7 +322,7 @@ class Processor():
         :param handlers: the list of primary `EventHandler`s
         :param kwargs: the parameters to pass on to new instances
         """
-        return DependencySolver(*handlers, **kwargs).solve()
+        return DependencySolver(*handlers, **kwargs).solve()  # type: ignore
 
     @staticmethod
     def _get_handler_maps(
@@ -288,10 +334,10 @@ class Processor():
         :param handlers: the list of handlers
         :return: the merged multimap
         """
-        handler_multimap = defaultdict(list)
+        handler_multimap: HandlerMultimap = defaultdict(list)
         for handler in handlers:
-            for event_name, handler in handler.handler_map.items():
-                handler_multimap[event_name].append(handler)
+            for event_name, handler_method in handler.handler_map.items():
+                handler_multimap[event_name].append(handler_method)
         return handler_multimap
 
     def _register_with_handlers(
@@ -306,20 +352,71 @@ class Processor():
         for handler in handlers:
             handler.register_processor(self)
 
+    def get_handler_by_type(
+        self,
+        handler_type: Type,
+    ) -> Union[EventHandler, None]:
+        """
+        Get an existing EventHandler instance from its type.
+
+        :param handler_type: the type of EventHandler subclass to find
+        :return: the EventHandler instance if found, otherwise `None`
+        """
+        return next(
+            (handler for handler in self._expanded_handlers if type(handler) is handler_type),
+            None,
+        )
+
+    @staticmethod
+    def get_event_names(
+        events: List[DictEvent],
+    ) -> Set[str]:
+        """Get set of names from a list of events."""
+        return {get_event_name(event) for event in events}
+
+    def _check_required_events(
+        self,
+        events: List[DictEvent],
+    ) -> None:
+        event_names = self.get_event_names(events)
+        # Check names separately so that we can know which event from which handler is missing
+        missing_events: Dict[str, Set[str]] = defaultdict(set)
+        for handler in self._expanded_handlers:
+            for name in handler.required_events():
+                if name not in event_names:
+                    missing_events[handler.__class__.__name__].add(name)
+        if missing_events:
+            raise self.RequiredEventNotFoundError(
+                f'missing events: {dict(missing_events)}'
+            )
+
     def process(
         self,
         events: List[DictEvent],
+        erase_progress: bool = False,
+        no_required_events_check: bool = False,
     ) -> None:
         """
         Process all events.
 
         :param events: the events to process
+        :param erase_progress: whether to erase the progress message
+        :param no_required_events_check: whether to skip the check for required events
         """
+        if not no_required_events_check:
+            self._check_required_events(events)
+
         if not self._processing_done:
-            self._progress_display.set_work_total(len(events))
-            for event in events:
-                self._process_event(event)
-                self._progress_display.did_work()
+            # Split into two versions so that performance is optimal
+            if self._progress_display is None:
+                for event in events:
+                    self._process_event(event)
+            else:
+                self._progress_display.set_work_total(len(events))
+                for event in events:
+                    self._process_event(event)
+                    self._progress_display.did_work()
+                self._progress_display.done(erase=erase_progress)
             self._processing_done = True
 
     def _process_event(self, event: DictEvent) -> None:
@@ -360,6 +457,130 @@ class Processor():
                 handler.data.print_data()
 
 
+class AutoProcessor():
+    """
+    Automatic processor, which takes a list of events and enables all relevant handlers.
+
+    It checks each existing EventHandler, and, if its required events are in the events list, it
+    uses that handler.
+    """
+
+    def __init__(
+        self,
+        events: List[DictEvent],
+        **kwargs,
+    ) -> None:
+        """
+        Create an AutoProcessor.
+
+        :param events: the list of events to process
+        :param kwargs: the kwargs to provide when instanciating EventHandler subclasses
+        """
+        self.handlers = self.get_applicable_event_handlers(events)
+        Processor(
+            *self.handlers,
+            **kwargs,
+        ).process(events)
+
+    def print_data(self) -> None:
+        """Print data models of all handlers."""
+        for handler in self.handlers:
+            handler.data.print_data()
+
+    @staticmethod
+    def get_applicable_event_handlers(
+        events: List[DictEvent],
+    ) -> List[EventHandler]:
+        """
+        Get applicable EventHandler instances for a list of events.
+
+        :param events: the list of events
+        :return the concrete EventHandler instances which are applicable
+        """
+        event_names = Processor.get_event_names(events)
+        # Force import of all processor submodules (i.e. files) so that we can find all
+        # EventHandler subclasses
+        AutoProcessor._import_event_handler_submodules()
+        all_handler_classes = AutoProcessor._get_subclasses(EventHandler)
+        applicable_handler_classes = AutoProcessor._get_applicable_event_handler_classes(
+            event_names,
+            all_handler_classes,
+        )
+        return AutoProcessor._get_event_handler_instances(applicable_handler_classes)
+
+    @staticmethod
+    def _get_applicable_event_handler_classes(
+        event_names: Set[str],
+        handler_classes: Set[Type[EventHandler]],
+    ) -> Set[Type[EventHandler]]:
+        """
+        Get applicable EventHandler subclasses for a set of event names.
+
+        :param event_names: the set of event names
+        :return: a list of EventHandler subclasses for which requirements are met
+        """
+        return {
+            handler for handler in handler_classes
+            if set(handler.required_events()).issubset(event_names)
+        }
+
+    @staticmethod
+    def _get_event_handler_instances(
+        handler_classes: Set[Type[EventHandler]],
+        **kwargs,
+    ) -> List[EventHandler]:
+        """
+        Create instances from a list of EventHandlers (sub)classes.
+
+        :param handler_classes: the list of EventHandler subclasses
+        :param kwargs: the kwargs to provide when instanciating EventHandler subclasses
+        :return: the list of concrete instances
+        """
+        # Doing this manually to catch exceptions, e.g. when a given EventHandler subclass is
+        # abstract and thus should not be instantiated
+        handlers = []
+        for handler_class in handler_classes:
+            try:
+                instance = handler_class(**kwargs)
+                handlers.append(instance)
+            except RuntimeError:
+                pass
+        return handlers
+
+    @staticmethod
+    def _get_subclasses(
+        cls: Type,
+    ) -> Set[Type]:
+        """Get all subclasses of a class recursively."""
+        return set(cls.__subclasses__()) | {
+            subsubcls
+            for subcls in cls.__subclasses__()
+            for subsubcls in AutoProcessor._get_subclasses(subcls)
+        }
+
+    @staticmethod
+    def _import_event_handler_submodules(
+        name: str = __name__,
+        recursive: bool = True,
+    ) -> Dict[str, ModuleType]:
+        """
+        Force import of EventHandler submodules.
+
+        :param name: the base module name
+        :param recursive: `True` if importing recursively, `False` otherwise
+        """
+        import importlib
+        import pkgutil
+        package = importlib.import_module(name)
+        results = {}
+        for loader, name, is_pkg in pkgutil.walk_packages(package.__path__):  # type: ignore #1422
+            full_name = package.__name__ + '.' + name
+            results[full_name] = importlib.import_module(full_name)
+            if recursive and is_pkg:
+                results.update(AutoProcessor._import_event_handler_submodules(full_name))
+        return results
+
+
 class ProcessingProgressDisplay():
     """Display processing progress periodically on stdout."""
 
@@ -368,15 +589,15 @@ class ProcessingProgressDisplay():
         processing_elements: List[str],
     ) -> None:
         """
-        Constructor.
+        Create a ProcessingProgressDisplay.
 
         :param processing_elements: the list of elements doing processing
         """
         self.__info_string = '[' + ', '.join(processing_elements) + ']'
-        self.__total_work = None
-        self.__progress_count = None
-        self.__rolling_count = None
-        self.__work_display_period = None
+        self.__total_work: int = 0
+        self.__progress_count: int = 0
+        self.__rolling_count: int = 0
+        self.__work_display_period: int = 0
 
     def set_work_total(
         self,
@@ -409,6 +630,28 @@ class ProcessingProgressDisplay():
             self.__rolling_count -= self.__work_display_period
             self._update()
 
-    def _update(self) -> None:
+    def _get_progress_message(
+        self,
+        percentage: float,
+    ) -> str:
+        return f' [{percentage:2.0f}%] {self.__info_string}'
+
+    def _update(
+        self,
+    ) -> None:
         percentage = 100.0 * (float(self.__progress_count) / float(self.__total_work))
-        sys.stdout.write(f' [{percentage:2.0f}%] {self.__info_string}\r')
+        sys.stdout.write(self._get_progress_message(percentage) + '\r')
+
+    def done(
+        self,
+        erase: bool = False,
+    ) -> None:
+        """
+        Set progress to done.
+
+        :param erase: whether to erase the progress message
+        """
+        if erase:
+            # Write spaces over progress message to "erase" it
+            sys.stdout.write(len(self._get_progress_message(100.0)) * ' ' + '\r')
+        sys.stdout.write('\n')

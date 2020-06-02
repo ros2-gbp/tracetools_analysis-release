@@ -24,6 +24,7 @@ from pandas import DataFrame
 
 from . import DataModelUtil
 from ..data_model.profile import ProfileDataModel
+from ..processor.profile import ProfileHandler
 
 
 class ProfileDataModelUtil(DataModelUtil):
@@ -31,14 +32,18 @@ class ProfileDataModelUtil(DataModelUtil):
 
     def __init__(
         self,
-        data_model: ProfileDataModel,
+        data_object: Union[ProfileDataModel, ProfileHandler],
     ) -> None:
         """
-        Constructor.
+        Create a ProfileDataModelUtil.
 
-        :param data_model: the data model object to use
+        :param data_object: the data model or the event handler which has a data model
         """
-        super().__init__(data_model)
+        super().__init__(data_object)
+
+    @property
+    def data(self) -> ProfileDataModel:
+        return super().data  # type: ignore
 
     def with_tid(
         self,
@@ -53,12 +58,12 @@ class ProfileDataModelUtil(DataModelUtil):
     def get_call_tree(
         self,
         tid: int,
-    ) -> Dict[str, List[str]]:
+    ) -> Dict[str, Set[str]]:
         depth_names = self.with_tid(tid)[
             ['depth', 'function_name', 'parent_name']
         ].drop_duplicates()
         # print(depth_names.to_string())
-        tree = defaultdict(set)
+        tree: Dict[str, Set[str]] = defaultdict(set)
         for _, row in depth_names.iterrows():
             depth = row['depth']
             name = row['function_name']

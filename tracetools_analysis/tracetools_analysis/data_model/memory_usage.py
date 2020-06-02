@@ -1,4 +1,4 @@
-# Copyright 2019 Robert Bosch GmbH
+# Copyright 2019 Apex.AI, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,48 +12,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module for CPU time data model."""
+"""Module for memory usage data model."""
 
 import pandas as pd
 
 from . import DataModel
 
 
-class CpuTimeDataModel(DataModel):
+class MemoryUsageDataModel(DataModel):
     """
-    Container to model pre-processed CPU time data for analysis.
+    Container to model pre-processed memory usage data for analysis.
 
-    Contains every duration instance.
+    Contains changes in memory allocation (e.g. + for malloc, - for free) with the corresponding
+    timestamp.
     """
 
     def __init__(self) -> None:
-        """Create a CpuTimeDataModel."""
+        """Create a MemoryUsageDataModel."""
         super().__init__()
-        self.times = pd.DataFrame(columns=[
+        self.memory_diff = pd.DataFrame(columns=[
+            'timestamp',
             'tid',
-            'start_timestamp',
-            'duration',
-            'cpu_id',
+            'memory_diff',
         ])
 
-    def add_duration(
+    def add_memory_difference(
         self,
+        timestamp: int,
         tid: int,
-        start_timestamp: int,
-        duration: int,
-        cpu_id: int,
+        memory_diff: int,
     ) -> None:
         data = {
+            'timestamp': timestamp,
             'tid': tid,
-            'start_timestamp': start_timestamp,
-            'duration': duration,
-            'cpu_id': cpu_id,
+            'memory_diff': memory_diff,
         }
-        self.times = self.times.append(data, ignore_index=True)
+        self.memory_diff = self.memory_diff.append(data, ignore_index=True)
 
     def print_data(self) -> None:
-        print('====================CPU TIME DATA MODEL====================')
+        print('==================MEMORY USAGE DATA MODEL==================')
         tail = 20
-        print(f'Times (tail={tail}):')
-        print(self.times.tail(tail).to_string())
+        print(f'Memory difference (tail={tail}):\n{self.memory_diff.tail(tail).to_string()}')
         print('===========================================================')

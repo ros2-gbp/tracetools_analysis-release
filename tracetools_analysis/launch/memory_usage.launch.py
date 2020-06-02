@@ -12,33 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Example launch file for a profiling analysis."""
+"""Example launch file for a memory_usage analysis."""
 
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from tracetools_launch.action import Trace
-from tracetools_trace.tools.names import DEFAULT_CONTEXT
 from tracetools_trace.tools.names import DEFAULT_EVENTS_ROS
 
 
 def generate_launch_description():
     return LaunchDescription([
         Trace(
-            session_name='profile',
+            session_name='memory-usage',
             events_ust=[
-                'lttng_ust_cyg_profile_fast:func_entry',
-                'lttng_ust_cyg_profile_fast:func_exit',
-                'lttng_ust_statedump:start',
-                'lttng_ust_statedump:end',
-                'lttng_ust_statedump:bin_info',
-                'lttng_ust_statedump:build_id',
+                'lttng_ust_libc:malloc',
+                'lttng_ust_libc:calloc',
+                'lttng_ust_libc:realloc',
+                'lttng_ust_libc:free',
+                'lttng_ust_libc:memalign',
+                'lttng_ust_libc:posix_memalign',
             ] + DEFAULT_EVENTS_ROS,
             events_kernel=[
-                'sched_switch',
+                'kmem_mm_page_alloc',
+                'kmem_mm_page_free',
             ],
-            context_names=[
-                'ip',
-            ] + DEFAULT_CONTEXT,
         ),
         Node(
             package='tracetools_test',

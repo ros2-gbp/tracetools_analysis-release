@@ -17,8 +17,8 @@
 
 import argparse
 import os
+import sys
 import time
-from typing import Optional
 
 from tracetools_analysis.conversion import ctf
 
@@ -33,13 +33,13 @@ def add_args(parser: argparse.ArgumentParser) -> None:
         'trace_directory',
         help='the path to the main trace directory')
     parser.add_argument(
-        '-o', '--output-file-name', dest='output_file_name',
+        '-o', '--output-file', dest='output_file_name', metavar='OUTPUT',
         default=DEFAULT_CONVERT_FILE_NAME,
         help='the name of the output file to generate, '
         'under $trace_directory (default: %(default)s)')
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description='Convert trace data to a file.')
     add_args(parser)
@@ -49,7 +49,7 @@ def parse_args():
 def convert(
     trace_directory: str,
     output_file_name: str = DEFAULT_CONVERT_FILE_NAME,
-) -> Optional[int]:
+) -> int:
     """
     Convert trace directory to a file.
 
@@ -58,13 +58,19 @@ def convert(
     :param trace_directory: the path to the trace directory to import
     :param outout_file_name: the name of the output file
     """
+    trace_directory = os.path.expanduser(trace_directory)
+    if not os.path.isdir(trace_directory):
+        print(f'trace directory does not exist: {trace_directory}', file=sys.stderr)
+        return 1
+
     print(f'converting trace directory: {trace_directory}')
-    output_file_path = os.path.join(os.path.expanduser(trace_directory), output_file_name)
+    output_file_path = os.path.join(trace_directory, output_file_name)
     start_time = time.time()
     count = ctf.convert(trace_directory, output_file_path)
     time_diff = time.time() - start_time
     print(f'converted {count} events in {time_diff_to_str(time_diff)}')
     print(f'output written to: {output_file_path}')
+    return 0
 
 
 def main():

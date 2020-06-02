@@ -1,4 +1,4 @@
-# Copyright 2019 Robert Bosch GmbH
+# Copyright 2019 Apex.AI, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,20 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Base data model module."""
+from tracetools_analysis.loading import load_file
+from tracetools_analysis.processor import AutoProcessor
+
+from . import get_input_path
 
 
-class DataModel():
-    """
-    Container with pre-processed data for an analysis to use.
+def main():
+    input_path = get_input_path()
 
-    Contains data for an analysis to use. This is a middleground between trace events data and the
-    output data of an analysis. It uses pandas `DataFrame` directly.
-    """
-
-    def __init__(self) -> None:
-        pass
-
-    def print_data(self) -> None:
-        """Print the data model."""
-        raise NotImplementedError
+    events = load_file(input_path)
+    processor = AutoProcessor(events)
+    processor.print_data()

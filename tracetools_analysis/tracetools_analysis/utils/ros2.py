@@ -18,12 +18,14 @@
 from typing import Any
 from typing import List
 from typing import Mapping
+from typing import Optional
 from typing import Union
 
 from pandas import DataFrame
 
 from . import DataModelUtil
 from ..data_model.ros2 import Ros2DataModel
+from ..processor.ros2 import Ros2Handler
 
 
 class Ros2DataModelUtil(DataModelUtil):
@@ -31,14 +33,18 @@ class Ros2DataModelUtil(DataModelUtil):
 
     def __init__(
         self,
-        data_model: Ros2DataModel,
+        data_object: Union[Ros2DataModel, Ros2Handler],
     ) -> None:
         """
-        Constructor.
+        Create a Ros2DataModelUtil.
 
-        :param data_model: the data model object to use
+        :param data_object: the data model or the event handler which has a data model
         """
-        super().__init__(data_model)
+        super().__init__(data_object)
+
+    @property
+    def data(self) -> Ros2DataModel:
+        return super().data  # type: ignore
 
     def _prettify(
         self,
@@ -58,13 +64,13 @@ class Ros2DataModelUtil(DataModelUtil):
         # remove spaces
         pretty = pretty.replace(' ', '')
         # allocator
-        STD_ALLOCATOR = '_<std::allocator<void>>'
-        pretty = pretty.replace(STD_ALLOCATOR, '')
+        std_allocator = '_<std::allocator<void>>'
+        pretty = pretty.replace(std_allocator, '')
         # default_delete
-        STD_DEFAULTDELETE = 'std::default_delete'
-        if STD_DEFAULTDELETE in pretty:
-            dd_start = pretty.find(STD_DEFAULTDELETE)
-            template_param_open = dd_start + len(STD_DEFAULTDELETE)
+        std_defaultdelete = 'std::default_delete'
+        if std_defaultdelete in pretty:
+            dd_start = pretty.find(std_defaultdelete)
+            template_param_open = dd_start + len(std_defaultdelete)
             # find index of matching/closing GT sign
             template_param_close = template_param_open
             level = 0
@@ -80,10 +86,10 @@ class Ros2DataModelUtil(DataModelUtil):
                         level -= 1
             pretty = pretty[:dd_start] + pretty[(template_param_close + 1):]
         # bind
-        STD_BIND = 'std::_Bind<'
-        if pretty.startswith(STD_BIND):
+        std_bind = 'std::_Bind<'
+        if pretty.startswith(std_bind):
             # remove bind<>
-            pretty = pretty.replace(STD_BIND, '')
+            pretty = pretty.replace(std_bind, '')
             pretty = pretty[:-1]
             # remove placeholder stuff
             placeholder_from = pretty.find('*')
@@ -114,6 +120,10 @@ class Ros2DataModelUtil(DataModelUtil):
             obj: self._prettify(callback_symbols.loc[obj, 'symbol']) for obj in callback_objects
         }
 
+    def get_tids(self) -> List[str]:
+        """Get a list of thread ids corresponding to the nodes."""
+        return self.data.nodes['tid'].unique().tolist()
+
     def get_callback_durations(
         self,
         callback_obj: int,
@@ -135,7 +145,7 @@ class Ros2DataModelUtil(DataModelUtil):
     def get_node_tid_from_name(
         self,
         node_name: str,
-    ) -> Union[int, None]:
+    ) -> Optional[int]:
         """
         Get the tid corresponding to a node.
 
@@ -152,7 +162,7 @@ class Ros2DataModelUtil(DataModelUtil):
     def get_node_names_from_tid(
         self,
         tid: str,
-    ) -> Union[List[str], None]:
+    ) -> Optional[List[str]]:
         """
         Get the list of node names corresponding to a tid.
 
@@ -166,7 +176,7 @@ class Ros2DataModelUtil(DataModelUtil):
     def get_callback_owner_info(
         self,
         callback_obj: int,
-    ) -> Union[str, None]:
+    ) -> Optional[str]:
         """
         Get information about the owner of a callback.
 
@@ -202,9 +212,9 @@ class Ros2DataModelUtil(DataModelUtil):
             type_name = 'Client'
             info = self.get_client_handle_info(reference)
 
-        if info is not None:
-            info = f'{type_name} -- {self.format_info_dict(info)}'
-        return info
+        if info is None:
+            return None
+        return f'{type_name} -- {self.format_info_dict(info)}'
 
     def get_timer_handle_info(
         self,
@@ -240,6 +250,8 @@ class Ros2DataModelUtil(DataModelUtil):
 
         node_handle = self.data.publishers.loc[publisher_handle, 'node_handle']
         node_handle_info = self.get_node_handle_info(node_handle)
+        if node_handle_info is None:
+            return None
         topic_name = self.data.publishers.loc[publisher_handle, 'topic_name']
         publisher_info = {'topic': topic_name}
         return {**node_handle_info, **publisher_info}
@@ -247,7 +259,7 @@ class Ros2DataModelUtil(DataModelUtil):
     def get_subscription_reference_info(
         self,
         subscription_reference: int,
-    ) -> Union[Mapping[str, Any], None]:
+    ) -> Optional[Mapping[str, Any]]:
         """
         Get information about a subscription handle.
 
@@ -292,6 +304,8 @@ class Ros2DataModelUtil(DataModelUtil):
 
         node_handle = subscriptions_info.loc[subscription_reference, 'node_handle']
         node_handle_info = self.get_node_handle_info(node_handle)
+        if node_handle_info is None:
+            return None
         topic_name = subscriptions_info.loc[subscription_reference, 'topic_name']
         subscription_info = {'topic': topic_name}
         return {**node_handle_info, **subscription_info}
@@ -299,7 +313,7 @@ class Ros2DataModelUtil(DataModelUtil):
     def get_service_handle_info(
         self,
         service_handle: int,
-    ) -> Union[Mapping[str, Any], None]:
+    ) -> Optional[Mapping[str, Any]]:
         """
         Get information about a service handle.
 
@@ -311,6 +325,8 @@ class Ros2DataModelUtil(DataModelUtil):
 
         node_handle = self.data.services.loc[service_handle, 'node_handle']
         node_handle_info = self.get_node_handle_info(node_handle)
+        if node_handle_info is None:
+            return None
         service_name = self.data.services.loc[service_handle, 'service_name']
         service_info = {'service': service_name}
         return {**node_handle_info, **service_info}
@@ -318,7 +334,7 @@ class Ros2DataModelUtil(DataModelUtil):
     def get_client_handle_info(
         self,
         client_handle: int,
-    ) -> Union[Mapping[str, Any], None]:
+    ) -> Optional[Mapping[str, Any]]:
         """
         Get information about a client handle.
 
@@ -330,6 +346,8 @@ class Ros2DataModelUtil(DataModelUtil):
 
         node_handle = self.data.clients.loc[client_handle, 'node_handle']
         node_handle_info = self.get_node_handle_info(node_handle)
+        if node_handle_info is None:
+            return None
         service_name = self.data.clients.loc[client_handle, 'service_name']
         service_info = {'service': service_name}
         return {**node_handle_info, **service_info}
@@ -337,7 +355,7 @@ class Ros2DataModelUtil(DataModelUtil):
     def get_node_handle_info(
         self,
         node_handle: int,
-    ) -> Union[Mapping[str, Any], None]:
+    ) -> Optional[Mapping[str, Any]]:
         """
         Get information about a node handle.
 

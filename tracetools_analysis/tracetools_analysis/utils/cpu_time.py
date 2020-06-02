@@ -14,10 +14,13 @@
 
 """Module for CPU time data model utils."""
 
+from typing import Union
+
 from pandas import DataFrame
 
 from . import DataModelUtil
 from ..data_model.cpu_time import CpuTimeDataModel
+from ..processor.cpu_time import CpuTimeHandler
 
 
 class CpuTimeDataModelUtil(DataModelUtil):
@@ -25,14 +28,18 @@ class CpuTimeDataModelUtil(DataModelUtil):
 
     def __init__(
         self,
-        data_model: CpuTimeDataModel,
+        data_object: Union[CpuTimeDataModel, CpuTimeHandler],
     ) -> None:
         """
-        Constructor.
+        Create a CpuTimeDataModelUtil.
 
-        :param data_model: the data model object to use
+        :param data_object: the data model or the event handler which has a data model
         """
-        super().__init__(data_model)
+        super().__init__(data_object)
+
+    @property
+    def data(self) -> CpuTimeDataModel:
+        return super().data  # type: ignore
 
     def get_time_per_thread(self) -> DataFrame:
         """Get a DataFrame of total duration for each thread."""

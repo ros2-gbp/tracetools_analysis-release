@@ -15,11 +15,13 @@
 """Module for CPU time events processing."""
 
 from typing import Dict
+from typing import Set
 
 from tracetools_read import get_field
 
 from . import EventHandler
 from . import EventMetadata
+from . import HandlerMap
 from ..data_model.cpu_time import CpuTimeDataModel
 
 
@@ -34,25 +36,31 @@ class CpuTimeHandler(EventHandler):
         self,
         **kwargs,
     ) -> None:
+        """Create a CpuTimeHandler."""
         # Link event to handling method
-        handler_map = {
+        handler_map: HandlerMap = {
             'sched_switch':
                 self._handle_sched_switch,
         }
         super().__init__(
             handler_map=handler_map,
+            data_model=CpuTimeDataModel(),
             **kwargs,
         )
-
-        self._data_model = CpuTimeDataModel()
 
         # Temporary buffers
         # cpu_id -> start timestamp of the running thread
         self._cpu_start: Dict[int, int] = {}
 
+    @staticmethod
+    def required_events() -> Set[str]:
+        return {
+            'sched_switch',
+        }
+
     @property
     def data(self) -> CpuTimeDataModel:
-        return self._data_model
+        return super().data  # type: ignore
 
     def _handle_sched_switch(
         self, event: Dict, metadata: EventMetadata

@@ -1,4 +1,4 @@
-# Copyright 2019 Robert Bosch GmbH
+# Copyright 2019 Apex.AI, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,20 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Base data model module."""
+import sys
+from typing import List
 
 
-class DataModel():
-    """
-    Container with pre-processed data for an analysis to use.
-
-    Contains data for an analysis to use. This is a middleground between trace events data and the
-    output data of an analysis. It uses pandas `DataFrame` directly.
-    """
-
-    def __init__(self) -> None:
-        pass
-
-    def print_data(self) -> None:
-        """Print the data model."""
-        raise NotImplementedError
+def get_input_path(
+    argv: List[str] = sys.argv,
+) -> str:
+    if len(argv) < 2:
+        print('Syntax: [trace directory | converted tracefile]')
+        sys.exit(1)
+    return argv[1]

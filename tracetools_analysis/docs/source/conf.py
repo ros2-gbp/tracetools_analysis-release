@@ -39,9 +39,9 @@ copyright = '2019-2020, Robert Bosch GmbH & Christophe Bedard'  # noqa
 author = 'Robert Bosch GmbH, Christophe Bedard'
 
 # The short X.Y version
-version = os.environ.get('SPHINX_VERSION_SHORT', '')
+version = ''
 # The full version, including alpha/beta/rc tags
-release = os.environ.get('SPHINX_VERSION_FULL', '')
+release = '1.0.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -100,7 +100,9 @@ html_theme = 'alabaster'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'sidebar_width': '260px',
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

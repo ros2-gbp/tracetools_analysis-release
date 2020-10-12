@@ -2,7 +2,7 @@ variables:
   DOCKER_DRIVER: overlay2
   PACKAGES_LIST: tracetools_analysis ros2trace_analysis
   BASE_IMAGE_ID: registry.gitlab.com/micro-ros/ros_tracing/ci_base
-  DISTRO: foxy
+  DISTRO: rolling
   ROS2TRACING_BRANCH: master
 
 stages:
@@ -31,20 +31,29 @@ build:
   script:
     - colcon build --symlink-install --event-handlers console_cohesion+ --packages-up-to $PACKAGES_LIST
     - colcon test --event-handlers console_cohesion+ --packages-select $PACKAGES_LIST
-    - colcon test-result --all
+    - colcon test-result --all --verbose
   <<: *global_artifacts
 
 coverage:
   stage: report
   image: $BASE_IMAGE_ID:$DISTRO
   script:
+    - pip3 install -U codecov
     - colcon build --symlink-install --event-handlers console_cohesion+ --packages-up-to $PACKAGES_LIST --mixin coverage-pytest --cmake-args -DBUILD_TESTING=ON --no-warn-unused-cli
     - colcon test --event-handlers console_cohesion+ --packages-select $PACKAGES_LIST --mixin coverage-pytest
-    - colcon test-result --all
-    - bash <(curl -s https://codecov.io/bash)
+    - colcon test-result --all --verbose
     - colcon coveragepy-result --packages-select $PACKAGES_LIST --verbose --coverage-report-args -m
+    - codecov --file coveragepy/.coverage
   allow_failure: true
   <<: *global_artifacts
+
+dco:
+  stage: report
+  image: $BASE_IMAGE_ID:$DISTRO-base
+  before_script: []
+  script:
+    - pip3 install -U dco-check
+    - dco-check --verbose
 
 trigger_gen_docs:
   stage: report

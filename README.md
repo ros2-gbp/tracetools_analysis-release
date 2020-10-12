@@ -1,3 +1,28 @@
+## tracetools_analysis (rolling) - 1.0.2-2
+
+The packages in the `tracetools_analysis` repository were released into the `rolling` distro by running `/usr/bin/bloom-release --rosdistro rolling --track rolling tracetools_analysis --override-release-repository-url https://gitlab.com/micro-ROS/ros_tracing/tracetools_analysis-release.git` on `Mon, 12 Oct 2020 19:31:47 -0000`
+
+These packages were released:
+- `ros2trace_analysis`
+- `tracetools_analysis`
+
+Version of package(s) in repository `tracetools_analysis`:
+
+- upstream repository: https://gitlab.com/micro-ROS/ros_tracing/tracetools_analysis.git
+- release repository: https://github.com/ros2-gbp/tracetools_analysis-release.git
+- rosdistro version: `1.0.1-2`
+- old version: `1.0.2-1`
+- new version: `1.0.2-2`
+
+Versions of tools used:
+
+- bloom version: `0.10.0`
+- catkin_pkg version: `0.4.23`
+- rosdep version: `0.19.0`
+- rosdistro version: `0.8.3`
+- vcstools version: `0.1.42`
+
+
 ## tracetools_analysis (rolling) - 1.0.2-1
 
 The packages in the `tracetools_analysis` repository were released into the `rolling` distro by running `/usr/bin/bloom-release --rosdistro rolling --track rolling tracetools_analysis --override-release-repository-url https://gitlab.com/micro-ROS/ros_tracing/tracetools_analysis-release.git` on `Mon, 12 Oct 2020 19:28:27 -0000`

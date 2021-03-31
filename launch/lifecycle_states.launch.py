@@ -1,4 +1,4 @@
-# Copyright 2019 Robert Bosch GmbH
+# Copyright 2020 Christophe Bedard
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Example launch file for a callback duration analysis."""
+"""Example launch file for a lifecycle node state analysis."""
 
 from launch import LaunchDescription
 from launch_ros.actions import Node
@@ -22,19 +22,17 @@ from tracetools_launch.action import Trace
 def generate_launch_description():
     return LaunchDescription([
         Trace(
-            session_name='pingpong',
+            session_name='lifecycle-node-state',
             events_kernel=[],
         ),
         Node(
             package='tracetools_test',
-            executable='test_ping',
-            arguments=['do_more'],
+            executable='test_lifecycle_node',
             output='screen',
         ),
         Node(
             package='tracetools_test',
-            executable='test_pong',
-            arguments=['do_more'],
+            executable='test_lifecycle_client',
             output='screen',
         ),
     ])

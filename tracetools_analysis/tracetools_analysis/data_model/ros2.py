@@ -15,7 +15,6 @@
 
 """Module for ROS 2 data model."""
 
-import numpy as np
 import pandas as pd
 
 from . import DataModel
@@ -41,13 +40,10 @@ class Ros2DataModel(DataModel):
         self._services: DataModelIntermediateStorage = []
         self._clients: DataModelIntermediateStorage = []
         self._timers: DataModelIntermediateStorage = []
-        self._timer_node_links: DataModelIntermediateStorage = []
         self._callback_objects: DataModelIntermediateStorage = []
         self._callback_symbols: DataModelIntermediateStorage = []
-        self._lifecycle_state_machines: DataModelIntermediateStorage = []
         # Events (multiple instances, may not have a meaningful index)
         self._callback_instances: DataModelIntermediateStorage = []
-        self._lifecycle_transitions: DataModelIntermediateStorage = []
 
     def add_context(
         self, context_handle, timestamp, pid, version
@@ -136,15 +132,6 @@ class Ros2DataModel(DataModel):
             'tid': tid,
         })
 
-    def add_timer_node_link(
-        self, handle, timestamp, node_handle
-    ) -> None:
-        self._timer_node_links.append({
-            'timer_handle': handle,
-            'timestamp': timestamp,
-            'node_handle': node_handle,
-        })
-
     def add_callback_object(
         self, reference, timestamp, callback_object
     ) -> None:
@@ -168,27 +155,9 @@ class Ros2DataModel(DataModel):
     ) -> None:
         self._callback_instances.append({
             'callback_object': callback_object,
-            'timestamp': np.datetime64(timestamp, 'ns'),
-            'duration': np.timedelta64(duration, 'ns'),
-            'intra_process': intra_process,
-        })
-
-    def add_lifecycle_state_machine(
-        self, handle, node_handle
-    ) -> None:
-        self._lifecycle_state_machines.append({
-            'state_machine_handle': handle,
-            'node_handle': node_handle,
-        })
-
-    def add_lifecycle_state_transition(
-        self, state_machine_handle, start_label, goal_label, timestamp
-    ) -> None:
-        self._lifecycle_transitions.append({
-            'state_machine_handle': state_machine_handle,
-            'start_label': start_label,
-            'goal_label': goal_label,
             'timestamp': timestamp,
+            'duration': duration,
+            'intra_process': intra_process,
         })
 
     def _finalize(self) -> None:
@@ -218,21 +187,13 @@ class Ros2DataModel(DataModel):
         self.timers = pd.DataFrame.from_dict(self._timers)
         if self._timers:
             self.timers.set_index('timer_handle', inplace=True, drop=True)
-        self.timer_node_links = pd.DataFrame.from_dict(self._timer_node_links)
-        if self._timer_node_links:
-            self.timer_node_links.set_index('timer_handle', inplace=True, drop=True)
         self.callback_objects = pd.DataFrame.from_dict(self._callback_objects)
         if self._callback_objects:
             self.callback_objects.set_index('reference', inplace=True, drop=True)
         self.callback_symbols = pd.DataFrame.from_dict(self._callback_symbols)
         if self._callback_symbols:
             self.callback_symbols.set_index('callback_object', inplace=True, drop=True)
-        self.lifecycle_state_machines = pd.DataFrame.from_dict(self._lifecycle_state_machines)
-        if self._lifecycle_state_machines:
-            self.lifecycle_state_machines.set_index(
-                'state_machine_handle', inplace=True, drop=True)
         self.callback_instances = pd.DataFrame.from_dict(self._callback_instances)
-        self.lifecycle_transitions = pd.DataFrame.from_dict(self._lifecycle_transitions)
 
     def print_data(self) -> None:
         print('====================ROS 2 DATA MODEL===================')
@@ -260,9 +221,6 @@ class Ros2DataModel(DataModel):
         print('Timers:')
         print(self.timers.to_string())
         print()
-        print('Timer-node links:')
-        print(self.timer_node_links.to_string())
-        print()
         print('Callback objects:')
         print(self.callback_objects.to_string())
         print()
@@ -271,10 +229,4 @@ class Ros2DataModel(DataModel):
         print()
         print('Callback instances:')
         print(self.callback_instances.to_string())
-        print()
-        print('Lifecycle state machines:')
-        print(self.lifecycle_state_machines.to_string())
-        print()
-        print('Lifecycle transitions:')
-        print(self.lifecycle_transitions.to_string())
         print('==================================================')

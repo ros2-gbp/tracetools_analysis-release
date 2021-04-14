@@ -1,3 +1,28 @@
+## tracetools_analysis (rolling) - 2.0.1-1
+
+The packages in the `tracetools_analysis` repository were released into the `rolling` distro by running `/usr/bin/bloom-release --rosdistro rolling --track rolling tracetools_analysis` on `Wed, 14 Apr 2021 19:47:41 -0000`
+
+These packages were released:
+- `ros2trace_analysis`
+- `tracetools_analysis`
+
+Version of package(s) in repository `tracetools_analysis`:
+
+- upstream repository: https://gitlab.com/ros-tracing/tracetools_analysis.git
+- release repository: https://gitlab.com/ros-tracing/tracetools_analysis-release.git
+- rosdistro version: `2.0.0-1`
+- old version: `2.0.0-1`
+- new version: `2.0.1-1`
+
+Versions of tools used:
+
+- bloom version: `0.10.6`
+- catkin_pkg version: `0.4.23`
+- rosdep version: `0.20.0`
+- rosdistro version: `0.8.3`
+- vcstools version: `0.1.42`
+
+
 ## tracetools_analysis (foxy) - 1.0.3-1
 
 The packages in the `tracetools_analysis` repository were released into the `foxy` distro by running `/usr/bin/bloom-release --rosdistro foxy --track foxy tracetools_analysis` on `Fri, 02 Apr 2021 13:27:24 -0000`

@@ -2,9 +2,14 @@
 Changelog for package tracetools_analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1.0.3 (2021-04-02)
+2.0.0 (2021-03-31)
 ------------------
+* Set callback_instances' timestamp & duration cols to datetime/timedelta
 * Improve performance by using lists of dicts as intermediate storage & converting to dataframes at the end
+* Update callback_duration notebook and pingpong sample data
+* Support instrumentation for linking a timer to a node
+* Disable kernel tracing for pingpong example launchfile
+* Support lifecycle node state transition instrumentation
 * Contributors: Christophe Bedard
 
 1.0.0 (2020-06-02)

@@ -1,6 +1,7 @@
 # tracetools_analysis
 
 [![pipeline status](https://gitlab.com/ros-tracing/tracetools_analysis/badges/master/pipeline.svg)](https://gitlab.com/ros-tracing/tracetools_analysis/commits/master)
+[![codecov](https://codecov.io/gl/ros-tracing/tracetools_analysis/branch/master/graph/badge.svg)](https://codecov.io/gl/ros-tracing/tracetools_analysis)
 
 Analysis tools for [ROS 2 tracing](https://gitlab.com/ros-tracing/ros2_tracing).
 

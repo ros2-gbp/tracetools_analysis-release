@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>ros2trace_analysis</name>
-  <version>2.0.2</version>
+  <version>2.0.3</version>
   <description>The trace-analysis command for ROS 2 command line tools.</description>
   <maintainer email="bedard.christophe@gmail.com">Christophe Bedard</maintainer>
   <license>Apache 2.0</license>
@@ -10,8 +10,6 @@
   <url type="repository">https://gitlab.com/ros-tracing/tracetools_analysis</url>
   <url type="bugtracker">https://gitlab.com/ros-tracing/tracetools_analysis/-/issues</url>
   <author email="christophe.bedard@apex.ai">Christophe Bedard</author>
-
-  <buildtool_depend>ament_package</buildtool_depend>
 
   <depend>ros2cli</depend>
   <depend>tracetools_analysis</depend>

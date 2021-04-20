@@ -1,0 +1,12 @@
+Source: ros-galactic-tracetools-analysis
+Section: misc
+Priority: optional
+Maintainer: Christophe Bedard <bedard.christophe@gmail.com>
+Build-Depends: debhelper (>= 9.0.0), python3-pandas, python3-pytest, ros-galactic-ament-copyright, ros-galactic-ament-flake8, ros-galactic-ament-mypy, ros-galactic-ament-pep257, ros-galactic-ament-xmllint, ros-galactic-tracetools-read, ros-galactic-ros-workspace, python3-all, python3-setuptools
+Homepage: https://index.ros.org/p/tracetools_analysis/
+Standards-Version: 3.9.2
+
+Package: ros-galactic-tracetools-analysis
+Architecture: any
+Depends: ${python3:Depends}, ${misc:Depends}, jupyter-notebook, python3-pandas, ros-galactic-tracetools-read, ros-galactic-ros-workspace
+Description: Tools for analysing trace data.

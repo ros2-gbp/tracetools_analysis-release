@@ -36,18 +36,19 @@ def generate_launch_description():
             events_kernel=[
                 'sched_switch',
             ],
-            context_names=[
-                'ip',
-            ] + DEFAULT_CONTEXT,
+            context_fields={
+                'kernel': DEFAULT_CONTEXT,
+                'userspace': DEFAULT_CONTEXT + ['ip'],
+            },
         ),
         Node(
-            package='tracetools_test',
+            package='test_tracetools',
             executable='test_ping',
             arguments=['do_more'],
             output='screen',
         ),
         Node(
-            package='tracetools_test',
+            package='test_tracetools',
             executable='test_pong',
             arguments=['do_more'],
             output='screen',

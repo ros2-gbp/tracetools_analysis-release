@@ -1,1 +1,1 @@
-{"base": "d86bd5d", "parent": "debian/rolling/tracetools_analysis", "previous": "41dcf01", "trim": "", "trimbase": ""}
+{"base": "0ff66e1", "parent": "debian/jazzy/tracetools_analysis", "previous": "92ebe4e", "trim": "", "trimbase": ""}

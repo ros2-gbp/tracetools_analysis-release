@@ -121,7 +121,7 @@ tracks:
     release_tag: :{version}
     ros_distro: humble
     vcs_type: git
-    vcs_uri: https://gitlab.com/ros-tracing/tracetools_analysis.git
+    vcs_uri: https://github.com/ros-tracing/tracetools_analysis.git
     version: :{auto}
   iron:
     actions:
@@ -138,7 +138,7 @@ tracks:
       :{release_inc} --os-name fedora
     - git-bloom-generate -y rosrpm --prefix release/:{ros_distro} :{ros_distro} -i
       :{release_inc} --os-name rhel --skip-keys jupyter-notebook
-    devel_branch: master
+    devel_branch: iron
     last_version: 3.0.0
     name: tracetools_analysis
     patches: null
@@ -147,7 +147,7 @@ tracks:
     release_tag: :{version}
     ros_distro: iron
     vcs_type: git
-    vcs_uri: https://gitlab.com/ros-tracing/tracetools_analysis.git
+    vcs_uri: https://github.com/ros-tracing/tracetools_analysis.git
     version: :{auto}
   jazzy:
     actions:
@@ -164,7 +164,7 @@ tracks:
       :{release_inc} --os-name fedora
     - git-bloom-generate -y rosrpm --prefix release/:{ros_distro} :{ros_distro} -i
       :{release_inc} --os-name rhel --skip-keys jupyter-notebook
-    devel_branch: master
+    devel_branch: jazzy
     last_version: 3.0.0
     name: tracetools_analysis
     patches: null
@@ -173,7 +173,7 @@ tracks:
     release_tag: :{version}
     ros_distro: jazzy
     vcs_type: git
-    vcs_uri: https://gitlab.com/ros-tracing/tracetools_analysis.git
+    vcs_uri: https://github.com/ros-tracing/tracetools_analysis.git
     version: :{auto}
   rolling:
     actions:
@@ -190,7 +190,7 @@ tracks:
       :{release_inc} --os-name fedora
     - git-bloom-generate -y rosrpm --prefix release/:{ros_distro} :{ros_distro} -i
       :{release_inc} --os-name rhel --skip-keys jupyter-notebook
-    devel_branch: master
+    devel_branch: rolling
     last_version: 3.0.0
     name: tracetools_analysis
     patches: null
@@ -199,5 +199,5 @@ tracks:
     release_tag: :{version}
     ros_distro: rolling
     vcs_type: git
-    vcs_uri: https://gitlab.com/ros-tracing/tracetools_analysis.git
+    vcs_uri: https://github.com/ros-tracing/tracetools_analysis.git
     version: :{auto}

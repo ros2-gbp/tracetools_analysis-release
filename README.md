@@ -1,19 +1,21 @@
 # tracetools_analysis
 
-[![pipeline status](https://gitlab.com/ros-tracing/tracetools_analysis/badges/master/pipeline.svg)](https://gitlab.com/ros-tracing/tracetools_analysis/commits/master)
-[![codecov](https://codecov.io/gl/ros-tracing/tracetools_analysis/branch/master/graph/badge.svg)](https://codecov.io/gl/ros-tracing/tracetools_analysis)
+<!-- [![GitHub CI](https://github.com/ros-tracing/tracetools_analysis/actions/workflows/test.yml/badge.svg?branch=rolling)](https://github.com/ros-tracing/tracetools_analysis/actions/workflows/test.yml) -->
+[![codecov](https://codecov.io/gh/ros-tracing/tracetools_analysis/branch/rolling/graph/badge.svg)](https://codecov.io/gh/ros-tracing/tracetools_analysis)
 
-Analysis tools for [ROS 2 tracing](https://gitlab.com/ros-tracing/ros2_tracing).
+Analysis tools for [`ros2_tracing`](https://github.com/ros2/ros2_tracing).
+
+**Note**: make sure to use the right branch, depending on the ROS 2 distro: [use `rolling` for Rolling, `humble` for Humble, etc.](https://docs.ros.org/en/rolling/The-ROS2-Project/Contributing/Developer-Guide.html)
 
 ## Trace analysis
 
-After generating a trace (see [`ros2_tracing`](https://gitlab.com/ros-tracing/ros2_tracing#tracing)), we can analyze it to extract useful execution data.
+After generating a trace (see [`ros2_tracing`](https://github.com/ros2/ros2_tracing#tracing)), we can analyze it to extract useful execution data.
 
 ### Commands
 
 Then we can process a trace to create a data model which could be queried for analysis.
 
-```
+```shell
 $ ros2 trace-analysis process /path/to/trace/directory
 ```
 
@@ -82,7 +84,7 @@ $ pip3 install bokeh
 
 ## Design
 
-See the [`ros2_tracing` design document](https://gitlab.com/ros-tracing/ros2_tracing/blob/master/doc/design_ros_2.md), especially the [*Goals and requirements*](https://gitlab.com/ros-tracing/ros2_tracing/blob/master/doc/design_ros_2.md#goals-and-requirements) and [*Analysis*](https://gitlab.com/ros-tracing/ros2_tracing/blob/master/doc/design_ros_2.md#analysis) sections.
+See the [`ros2_tracing` design document](https://github.com/ros2/ros2_tracing/blob/rolling/doc/design_ros_2.md), especially the [*Goals and requirements*](https://github.com/ros2/ros2_tracing/blob/rolling/doc/design_ros_2.md#goals-and-requirements) and [*Analysis*](https://github.com/ros2/ros2_tracing/blob/rolling/doc/design_ros_2.md#analysis) sections.
 
 ## Packages
 
@@ -94,4 +96,4 @@ Package containing a `ros2cli` extension to perform trace analysis.
 
 Package containing tools for analyzing trace data.
 
-See the [API documentation](https://ros-tracing.gitlab.io/tracetools_analysis-api/).
+See the [API documentation](https://docs.ros.org/en/rolling/p/tracetools_analysis/).

@@ -2,13 +2,13 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>ros2trace_analysis</name>
-  <version>3.0.0</version>
+  <version>3.1.0</version>
   <description>The trace-analysis command for ROS 2 command line tools.</description>
   <maintainer email="bedard.christophe@gmail.com">Christophe Bedard</maintainer>
   <license>Apache 2.0</license>
   <url type="website">https://index.ros.org/p/ros2trace_analysis/</url>
-  <url type="repository">https://gitlab.com/ros-tracing/tracetools_analysis</url>
-  <url type="bugtracker">https://gitlab.com/ros-tracing/tracetools_analysis/-/issues</url>
+  <url type="repository">https://github.com/ros-tracing/tracetools_analysis</url>
+  <url type="bugtracker">https://github.com/ros-tracing/tracetools_analysis/issues</url>
   <author email="christophe.bedard@apex.ai">Christophe Bedard</author>
 
   <depend>ros2cli</depend>

@@ -7,7 +7,7 @@ package_name = 'tracetools_analysis'
 
 setup(
     name=package_name,
-    version='3.0.0',
+    version='3.1.0',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/' + package_name, ['package.xml']),
@@ -32,7 +32,7 @@ setup(
         'fixed-term.christophe.bourquebedard@de.bosch.com, '
         'ingo.luetkebohle@de.bosch.com'
     ),
-    url='https://gitlab.com/ros-tracing/tracetools_analysis',
+    url='https://github.com/ros-tracing/tracetools_analysis',
     keywords=[],
     description='Tools for analysing trace data.',
     long_description=(

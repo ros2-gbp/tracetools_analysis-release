@@ -5,7 +5,7 @@ package_name = 'ros2trace_analysis'
 
 setup(
     name=package_name,
-    version='3.0.0',
+    version='3.1.0',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/' + package_name, ['package.xml']),
@@ -22,7 +22,7 @@ setup(
     ),
     author='Christophe Bedard',
     author_email='christophe.bedard@apex.ai',
-    url='https://gitlab.com/ros-tracing/tracetools_analysis',
+    url='https://github.com/ros-tracing/tracetools_analysis',
     keywords=[],
     description='The trace-analysis command for ROS 2 command line tools.',
     long_description=(

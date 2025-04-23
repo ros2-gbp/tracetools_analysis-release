@@ -1,0 +1,12 @@
+Source: ros-kilted-tracetools-analysis
+Section: misc
+Priority: optional
+Maintainer: Christophe Bedard <bedard.christophe@gmail.com>
+Build-Depends: debhelper (>= 9.0.0), python3-pandas, python3-pytest <!nocheck>, ros-kilted-ament-copyright <!nocheck>, ros-kilted-ament-flake8 <!nocheck>, ros-kilted-ament-mypy <!nocheck>, ros-kilted-ament-pep257 <!nocheck>, ros-kilted-ament-xmllint <!nocheck>, ros-kilted-tracetools-read, ros-kilted-tracetools-trace, ros-kilted-ros-workspace, python3-all, python3-setuptools, dh-python
+Homepage: https://index.ros.org/p/tracetools_analysis/
+Standards-Version: 3.9.2
+
+Package: ros-kilted-tracetools-analysis
+Architecture: any
+Depends: ${python3:Depends}, ${misc:Depends}, jupyter-notebook, python3-pandas, ros-kilted-tracetools-read, ros-kilted-tracetools-trace, ros-kilted-ros-workspace
+Description: Tools for analysing trace data.

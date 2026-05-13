@@ -214,8 +214,8 @@ tracks:
       -i :{release_inc} --os-name debian --os-not-required
     - git-bloom-generate -y rosrpm --prefix release/:{ros_distro} :{ros_distro} -i
       :{release_inc} --os-name fedora
-    - git-bloom-generate -y rosrpm --prefix release/:{ros_distro} :{ros_distro} -i
-      :{release_inc} --os-name rhel --skip-keys jupyter-notebook
+    - git-bloom-generate -y rosdynrpm --prefix release/:{ros_distro} :{ros_distro}
+      -i :{release_inc} --require-os fedora rhel
     devel_branch: rolling
     last_version: 3.1.0
     name: tracetools_analysis
@@ -241,7 +241,9 @@ tracks:
     - git-bloom-generate -y rosrpm --prefix release/:{ros_distro} :{ros_distro} -i
       :{release_inc} --os-name fedora
     - git-bloom-generate -y rosrpm --prefix release/:{ros_distro} :{ros_distro} -i
-      :{release_inc} --os-name rhel --skip-keys jupyter-notebook
+      :{release_inc} --os-name rhel
+    - git-bloom-generate -y rosdynrpm --prefix release/:{ros_distro} :{ros_distro}
+      -i :{release_inc} --require-os fedora rhel
     devel_branch: rolling
     last_version: 3.1.0
     name: tracetools_analysis
